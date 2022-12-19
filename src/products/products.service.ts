@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common/exceptions';
 import { InjectRepository } from '@nestjs/typeorm';
-import { NotFoundError } from 'rxjs';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
-
+import { validate as IsUuid } from "uuid"
 @Injectable()
 export class ProductsService {
 
@@ -25,21 +25,36 @@ export class ProductsService {
     }
   }
 
-  async findAll() {
-
+  async findAll(paginationDto: PaginationDto) {
     try{
-      return await this.productRepository.find({});
+      const { limit, offset } = paginationDto;
+      return await this.productRepository.find({take: limit, skip: offset});
 
     }catch(e){
       this.handleException(e);
     }
   }
 
-  async findOne(id: string) {
-    const product = await this.productRepository.findOneBy({ id });
-    if(!product)
-      throw new NotFoundException(`Product with id: ${id} not found`)
+  async findOne(term: string) {
+
+    try{
+
+      let product: Product
+      
+      if(IsUuid(term)){
+        product = await this.productRepository.findOneBy({ id: term });        
+      }else{
+        const queryBuilder = this.productRepository.createQueryBuilder();
+        product =  await queryBuilder.where(`UPPER(title) =:title or LOWER(slug) =:slug`, {title: term.toUpperCase(), slug: term.toLowerCase()}).getOne()  
+      }
+
+      if(!product)
+      throw new NotFoundException(`Product with id: ${term} not found`)
       return product
+      
+    }catch(e: any){
+      this.handleException(e)
+    }
     
   }
 
