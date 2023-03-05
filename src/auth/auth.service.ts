@@ -1,7 +1,7 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateUserDto } from './dto/crete-user.dto';
+import { CreateUserDto, LoginUserDto } from './dto/dto';
 import { User } from './entities/user.entity';
 import * as bcr from 'bcrypt';
 
@@ -25,6 +25,21 @@ export class AuthService {
     }
   }
 
+  async login(loginUserDto: LoginUserDto){
+      const { password, email } = loginUserDto;
+      const user = await this.userRepository.findOne( { 
+        where: { email },
+        select: { email: true, password: true } 
+      }); 
+
+      if(!user) 
+      throw new UnauthorizedException('credentials are not valid');
+      
+      if(!bcr.compareSync( password, user.password )) 
+      throw new UnauthorizedException('credentials are not valid');
+      return user;
+
+  }
    private handleError(error: any): never{
     if(error.code === '23505')
       throw new BadRequestException(error.detail);
