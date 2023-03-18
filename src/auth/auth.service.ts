@@ -25,7 +25,7 @@ export class AuthService {
       const user = this.userRepository.create( {...userData, password: bcr.hashSync( password, 10 ) } );
       await this.userRepository.save( user );
       delete user.password;
-      return {...user, token: this.getJWT({ email: user.email })};
+      return {...user, token: this.getJWT({ id: user.id })};
     }catch(e){
       this.handleError(e);
     }
@@ -35,7 +35,7 @@ export class AuthService {
       const { password, email } = loginUserDto;
       const user = await this.userRepository.findOne( { 
         where: { email },
-        select: { email: true, password: true } 
+        select: { email: true, password: true, id: true } 
       }); 
 
       if(!user) 
@@ -43,7 +43,7 @@ export class AuthService {
       
       if(!bcr.compareSync( password, user.password )) 
       throw new UnauthorizedException('credentials are not valid');
-      return {...user, token: this.getJWT({email: user.email})};
+      return {...user, token: this.getJWT({id: user.id})};
 
   }
 
