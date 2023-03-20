@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Req, SetMetadata } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { GetUser, RawHeaders } from './decorators';
@@ -34,8 +34,9 @@ export class AuthController {
   }
 
   @Get('private2')
+  @SetMetadata('roles', ['admin', 'super-user'])
   @UseGuards(AuthGuard(), UserRoleGuard )
   privateRoute(@GetUser() user: User){
-
+    return user;
   }
 }
