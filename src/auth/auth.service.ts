@@ -60,4 +60,11 @@ export class AuthService {
     throw new InternalServerErrorException('Please check servers logs');
 
   }
+
+  async checkAuthStatus(user: User){
+    return {
+      ...user,
+      token: this.getJWT({id: user.id})
+    }
+  }
 }
